@@ -1,0 +1,28 @@
+{
+  "name": "discord-bot",
+  "version": "1.0.0",
+  "description": "Discord에서 한국어와 일본어 간의 실시간 번역을 지원하는 번역 봇 프로젝트입니다.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sin3791/discord-bot.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/sin3791/discord-bot/issues"
+  },
+  "homepage": "https://github.com/sin3791/discord-bot#readme",
+  "dependencies": {
+    "discord.js": "^14.26.5",
+    "dotenv": "^17.4.2"
+  }
+}
