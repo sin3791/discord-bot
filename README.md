@@ -13,6 +13,9 @@ Discord에서 한국어와 일본어 간의 실시간 번역을 지원하는 번
 
 ## 기술 스택
 
+### Frontend
+* HTML + CSS + JavaScript
+
 ### Backend
 
 * Java 21
@@ -22,6 +25,10 @@ Discord에서 한국어와 일본어 간의 실시간 번역을 지원하는 번
 ### Database
 
 * MySQL
+
+### api
+
+* Discord.js + DeepL
 
 ## 개발 진행 상황
 
