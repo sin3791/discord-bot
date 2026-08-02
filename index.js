@@ -13,6 +13,8 @@ const {
 const deepl = require("deepl-node");
 
 const PORT = 3000;
+const MAX_MESSAGE_LENGTH = 1000;
+
 const DISCORD_CHANNEL_ID =
   process.env.DISCORD_CHANNEL_ID;
 
@@ -38,13 +40,26 @@ const client = new Client({
   ],
 });
 
+/*
+ * 웹 서버 확인용 주소
+ * http://localhost:3000으로 접속하면 확인할 수 있습니다.
+ */
 app.get("/", (request, response) => {
   response.send("번역 서버가 실행 중입니다.");
 });
 
+/*
+ * React 웹사이트 연결
+ */
 io.on("connection", (socket) => {
   console.log("웹사이트 연결:", socket.id);
 
+  /*
+   * 웹사이트 한국어
+   * → 일본어 번역
+   * → Discord 전송
+   * → 웹사이트에 번역 결과 표시
+   */
   socket.on("chat:send", async (data, callback) => {
     const originalText =
       typeof data?.text === "string"
@@ -59,26 +74,37 @@ io.on("connection", (socket) => {
       return;
     }
 
+    if (originalText.length > MAX_MESSAGE_LENGTH) {
+      callback({
+        ok: false,
+        error: `메시지는 ${MAX_MESSAGE_LENGTH}자까지 입력할 수 있습니다.`,
+      });
+      return;
+    }
+
     console.log("웹사이트 메시지:", originalText);
 
     try {
-      const result = await translator.translateText(
-        originalText,
-        null,
-        "ja"
-      );
-
       if (!DISCORD_CHANNEL_ID) {
         throw new Error(
           "DISCORD_CHANNEL_ID가 설정되지 않았습니다."
         );
       }
 
+      const result = await translator.translateText(
+        originalText,
+        null,
+        "ja"
+      );
+
       const channel = await client.channels.fetch(
         DISCORD_CHANNEL_ID
       );
 
-      if (!channel?.isTextBased()) {
+      if (
+        !channel?.isTextBased() ||
+        typeof channel.send !== "function"
+      ) {
         throw new Error(
           "Discord 텍스트 채널을 찾을 수 없습니다."
         );
@@ -96,76 +122,183 @@ io.on("connection", (socket) => {
         translated: result.text,
       };
 
-      io.emit("chat:message", translatedMessage);
+      io.emit(
+        "chat:message",
+        translatedMessage
+      );
 
       callback({
         ok: true,
       });
     } catch (error) {
-      console.error("웹사이트 전송 오류:", error);
+      console.error(
+        "웹사이트 전송 오류:",
+        error
+      );
 
       callback({
         ok: false,
-        error: "메시지를 번역하거나 전송하지 못했습니다.",
+        error:
+          "메시지를 번역하거나 전송하지 못했습니다.",
       });
     }
   });
 
   socket.on("disconnect", () => {
-    console.log("웹사이트 연결 종료:", socket.id);
+    console.log(
+      "웹사이트 연결 종료:",
+      socket.id
+    );
   });
 });
 
-client.once(Events.ClientReady, (readyClient) => {
-  console.log(`${readyClient.user.tag} 로그인 성공!`);
-  console.log("봇이 접근 가능한 텍스트 채널:");
+/*
+ * Discord 봇 로그인 완료
+ */
+client.once(
+  Events.ClientReady,
+  (readyClient) => {
+    console.log(
+      `${readyClient.user.tag} 로그인 성공!`
+    );
+  }
+);
 
-  readyClient.channels.cache.forEach((channel) => {
-    if (channel.isTextBased() && channel.name) {
-      console.log(`#${channel.name}: ${channel.id}`);
+/*
+ * Discord 메시지 자동 번역
+ *
+ * 한국어 → 일본어
+ * 일본어 → 한국어
+ *
+ * 번역 결과를 Discord와 웹사이트에 모두 표시합니다.
+ */
+client.on(
+  Events.MessageCreate,
+  async (message) => {
+    /*
+     * 봇이 보낸 메시지를 다시 처리하지 않습니다.
+     * 무한 반복 방지 코드입니다.
+     */
+    if (message.author.bot) {
+      return;
     }
-  });
-});
 
+    /*
+     * .env에서 지정한 채널만 처리합니다.
+     */
+    if (
+      message.channelId !==
+      DISCORD_CHANNEL_ID
+    ) {
+      return;
+    }
 
-client.on(Events.MessageCreate, async (message) => {
-  if (message.author.bot) {
-    return;
-  }
+    /*
+     * !번역을 붙여도 되고 일반 메시지를 작성해도 됩니다.
+     */
+    const originalText = message.content
+      .replace(/^!번역\s*/, "")
+      .trim();
 
-  console.log(
-    `${message.author.username}: ${message.content}`
-  );
+    if (!originalText) {
+      return;
+    }
 
-  if (!message.content.startsWith("!번역 ")) {
-    return;
-  }
+    if (
+      originalText.length >
+      MAX_MESSAGE_LENGTH
+    ) {
+      await message.reply(
+        `메시지는 ${MAX_MESSAGE_LENGTH}자까지 입력할 수 있습니다.`
+      );
+      return;
+    }
 
-  const originalText = message.content.slice(4).trim();
+    /*
+     * 한글 포함 여부로 번역 방향을 결정합니다.
+     */
+    const containsKorean =
+      /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(
+        originalText
+      );
 
-  if (!originalText) {
-    await message.reply("번역할 문장을 입력해주세요.");
-    return;
-  }
+    const targetLanguage =
+      containsKorean ? "ja" : "ko";
 
-  try {
-    const result = await translator.translateText(
-      originalText,
-      null,
-      "ja"
+    const targetFlag =
+      containsKorean ? "🇯🇵" : "🇰🇷";
+
+    console.log(
+      `Discord 메시지: ${message.author.username}: ${originalText}`
     );
 
-    await message.reply(`🇯🇵 ${result.text}`);
-  } catch (error) {
-    console.error("Discord 번역 오류:", error);
-    await message.reply("번역 중 오류가 발생했습니다.");
-  }
-});
+    try {
+      const result =
+        await translator.translateText(
+          originalText,
+          null,
+          targetLanguage
+        );
 
+      /*
+       * Discord에 번역 결과 답변
+       */
+      await message.reply(
+        `${targetFlag} ${result.text}`
+      );
+
+      /*
+       * React 웹사이트로 실시간 전달
+       */
+      const translatedMessage = {
+        id: message.id,
+        source: "discord",
+        author:
+          message.member?.displayName ||
+          message.author.username,
+        original: originalText,
+        translated: result.text,
+      };
+
+      io.emit(
+        "chat:message",
+        translatedMessage
+      );
+    } catch (error) {
+      console.error(
+        "Discord 번역 오류:",
+        error
+      );
+
+      await message.reply(
+        "메시지를 번역하지 못했습니다."
+      );
+
+      io.emit(
+        "chat:error",
+        "Discord 메시지를 번역하지 못했습니다."
+      );
+    }
+  }
+);
+
+/*
+ * Express와 Socket.IO 서버 시작
+ */
 server.listen(PORT, () => {
   console.log(
     `웹 서버 실행 성공: http://localhost:${PORT}`
   );
 });
 
-client.login(process.env.DISCORD_TOKEN);
+/*
+ * Discord 봇 로그인
+ */
+client
+  .login(process.env.DISCORD_TOKEN)
+  .catch((error) => {
+    console.error(
+      "Discord 로그인 오류:",
+      error
+    );
+  });
