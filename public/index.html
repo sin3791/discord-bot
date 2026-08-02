@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>한일 실시간 번역 채팅</title>
+</head>
+
+<body>
+  <main>
+    <h1>한일 실시간 번역 채팅</h1>
+    <p>웹사이트에서 입력한 한국어를 일본어로 번역해 Discord로 전송합니다.</p>
+
+    <section>
+      <h2>실시간 대화</h2>
+
+      <div id="messages">
+        <p>아직 메시지가 없습니다.</p>
+      </div>
+    </section>
+
+    <form id="message-form">
+      <label for="message-input">한국어 메시지</label>
+
+      <input
+        id="message-input"
+        type="text"
+        maxlength="1000"
+        placeholder="메시지를 입력하세요"
+        required
+      >
+
+      <button type="submit">전송</button>
+    </form>
+  </main>
+</body>
+</html>
