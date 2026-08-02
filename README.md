@@ -1,47 +1,46 @@
-# Translator Chat Bot
+# Discord 실시간 번역 채팅
 
-Discord에서 한국어와 일본어 간의 실시간 번역을 지원하는 번역 봇 프로젝트입니다.
+React 웹사이트와 Discord 채널을 연결하여 한국어와 일본어를 실시간으로 번역하는 프로젝트입니다.
 
-## 프로젝트 목표
+## 주요 기능
 
-* Discord Bot 기반 실시간 번역 서비스
-* 한국어 ↔ 일본어 자동 번역
-* 번역 결과 자동 출력
-* 번역 이력 저장
-* 웹사이트 크로스 연동
-
+- 웹사이트 한국어 메시지를 일본어로 번역
+- 번역된 일본어를 지정한 Discord 채널로 전송
+- Discord 한국어 메시지를 일본어로 자동 번역
+- Discord 일본어 메시지를 한국어로 자동 번역
+- Discord 번역 결과를 React 웹사이트에 실시간 표시
+- 봇 메시지 재처리 및 무한 반복 방지
+- 빈 메시지와 1,000자 초과 메시지 제한
 
 ## 기술 스택
 
 ### Frontend
-* React (수정)
+
+- React
+- Vite
+- Socket.IO Client
+
 ### Backend
 
-* Java 21
-* Node.js (수정)
+- Node.js
+- Express
+- Socket.IO
+- Discord.js
+- DeepL Node SDK
 
-### Database
+## 프로젝트 구조
 
-* MySQL
-
-### api
-
-* Discord.js + DeepL
-
-## 개발 진행 상황
-
-* [x] 요구사항 정의
-* [x] 기능 설계
-* [x] Discord Bot 연동
-* [x] 번역 API 연동
-* [ ] DB 연동
-* [ ] 기능 확장
-* [ ] React 연동
-
-
-
-## 실행방법
-* 디스코드 챗봇 생성
-* 디스코드 방 생성
-* !번역 ( 말하고 싶은 말 )입력
- 
+```text
+discord-bot/
+├── client/
+│   ├── src/
+│   │   ├── App.jsx
+│   │   ├── App.css
+│   │   └── index.css
+│   └── package.json
+├── docs/
+├── .env
+├── .gitignore
+├── index.js
+├── package.json
+└── README.md
