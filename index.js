@@ -43,22 +43,50 @@ app.get("/", (request, response) => {
 io.on("connection", (socket) => {
   console.log("웹사이트 연결:", socket.id);
 
-  socket.on("chat:send", (data, callback) => {
-    console.log("웹사이트 메시지:", data.text);
+  socket.on("chat:send", async (data, callback) => {
+    const originalText =
+      typeof data?.text === "string"
+        ? data.text.trim()
+        : "";
 
-    const testMessage = {
-      id: Date.now(),
-      source: "web",
-      author: "웹 사용자",
-      original: data.text,
-      translated: "서버 연결 테스트 성공",
-    };
+    if (!originalText) {
+      callback({
+        ok: false,
+        error: "번역할 메시지를 입력해주세요.",
+      });
+      return;
+    }
 
-    io.emit("chat:message", testMessage);
+    console.log("웹사이트 메시지:", originalText);
 
-    callback({
-      ok: true,
-    });
+    try {
+      const result = await translator.translateText(
+        originalText,
+        null,
+        "ja"
+      );
+
+      const translatedMessage = {
+        id: Date.now(),
+        source: "web",
+        author: "웹 사용자",
+        original: originalText,
+        translated: result.text,
+      };
+
+      io.emit("chat:message", translatedMessage);
+
+      callback({
+        ok: true,
+      });
+    } catch (error) {
+      console.error("웹사이트 번역 오류:", error);
+
+      callback({
+        ok: false,
+        error: "메시지를 번역하지 못했습니다.",
+      });
+    }
   });
 
   socket.on("disconnect", () => {
