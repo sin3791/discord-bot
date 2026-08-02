@@ -1,9 +1,32 @@
-require("dotenv").config();
+require("dotenv").config({ quiet: true });
 
-const { Client, Events, GatewayIntentBits } = require("discord.js");
+const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
+
+const {
+  Client,
+  Events,
+  GatewayIntentBits,
+} = require("discord.js");
+
 const deepl = require("deepl-node");
 
-const translator = new deepl.DeepLClient(process.env.DEEPL_API_KEY);
+const PORT = 3000;
+
+const app = express();
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"],
+  },
+});
+
+const translator = new deepl.DeepLClient(
+  process.env.DEEPL_API_KEY
+);
 
 const client = new Client({
   intents: [
@@ -13,18 +36,52 @@ const client = new Client({
   ],
 });
 
+app.get("/", (request, response) => {
+  response.send("번역 서버가 실행 중입니다.");
+});
+
+io.on("connection", (socket) => {
+  console.log("웹사이트 연결:", socket.id);
+
+  socket.on("chat:send", (data, callback) => {
+    console.log("웹사이트 메시지:", data.text);
+
+    const testMessage = {
+      id: Date.now(),
+      source: "web",
+      author: "웹 사용자",
+      original: data.text,
+      translated: "서버 연결 테스트 성공",
+    };
+
+    io.emit("chat:message", testMessage);
+
+    callback({
+      ok: true,
+    });
+  });
+
+  socket.on("disconnect", () => {
+    console.log("웹사이트 연결 종료:", socket.id);
+  });
+});
+
 client.once(Events.ClientReady, (readyClient) => {
   console.log(`${readyClient.user.tag} 로그인 성공!`);
 });
 
 client.on(Events.MessageCreate, async (message) => {
-  // 봇이 보낸 메시지는 무시
-  if (message.author.bot) return;
+  if (message.author.bot) {
+    return;
+  }
 
-  console.log(`${message.author.username}: ${message.content}`);
+  console.log(
+    `${message.author.username}: ${message.content}`
+  );
 
-  // "!번역 "으로 시작하는 메시지만 처리
-  if (!message.content.startsWith("!번역 ")) return;
+  if (!message.content.startsWith("!번역 ")) {
+    return;
+  }
 
   const originalText = message.content.slice(4).trim();
 
@@ -34,7 +91,6 @@ client.on(Events.MessageCreate, async (message) => {
   }
 
   try {
-    // 원문 언어 자동 감지 → 일본어 번역
     const result = await translator.translateText(
       originalText,
       null,
@@ -46,6 +102,12 @@ client.on(Events.MessageCreate, async (message) => {
     console.error("번역 오류:", error);
     await message.reply("번역 중 오류가 발생했습니다.");
   }
+});
+
+server.listen(PORT, () => {
+  console.log(
+    `웹 서버 실행 성공: http://localhost:${PORT}`
+  );
 });
 
 client.login(process.env.DISCORD_TOKEN);
