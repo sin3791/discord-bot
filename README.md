@@ -28,24 +28,6 @@ React 웹사이트와 Discord 채널을 연결하여 한국어와 일본어를 �
 - Discord.js
 - DeepL Node SDK
 
-## 프로젝트 구조
-
-```text
-discord-bot/
-├── client/
-│   ├── src/
-│   │   ├── App.jsx
-│   │   ├── App.css
-│   │   └── index.css
-│   └── package.json
-├── docs/
-├── .env
-├── .gitignore
-├── index.js
-├── package.json
-└── README.md
-
-
 ## 배포 주소
 
 https://discord-bot-syeb.onrender.com
@@ -71,6 +53,27 @@ https://discord-bot-syeb.onrender.com
 
 Render 무료 서버는 일정 시간 요청이 없으면 자동으로 중지됩니다.
 첫 접속 시 서버가 시작되기까지 약 1분이 걸릴 수 있습니다.
+
+
+## 프로젝트 구조
+
+```text
+discord-bot/
+├── client/
+│   ├── src/
+│   │   ├── App.jsx
+│   │   ├── App.css
+│   │   └── index.css
+│   └── package.json
+├── docs/
+├── .env
+├── .gitignore
+├── index.js
+├── package.json
+└── README.md
+
+
+
 
 
 
