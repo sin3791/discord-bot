@@ -2,6 +2,7 @@ require("dotenv").config({ quiet: true });
 
 const express = require("express");
 const http = require("http");
+const path = require("path");
 const { Server } = require("socket.io");
 
 const {
@@ -12,7 +13,7 @@ const {
 
 const deepl = require("deepl-node");
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const MAX_MESSAGE_LENGTH = 1000;
 
 const DISCORD_CHANNEL_ID =
@@ -23,7 +24,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: process.env.CLIENT_ORIGIN || "http://localhost:5173",
     methods: ["GET", "POST"],
   },
 });
@@ -44,8 +45,16 @@ const client = new Client({
  * 웹 서버 확인용 주소
  * http://localhost:3000으로 접속하면 확인할 수 있습니다.
  */
-app.get("/", (request, response) => {
-  response.send("번역 서버가 실행 중입니다.");
+app.get("/api/health", (request, response) => {
+  response.json({ ok: true });
+});
+
+const clientDistPath = path.join(__dirname, "client", "dist");
+
+app.use(express.static(clientDistPath));
+
+app.get("/{*splat}", (request, response) => {
+  response.sendFile(path.join(clientDistPath, "index.html"));
 });
 
 /*
