@@ -44,3 +44,33 @@ discord-bot/
 ├── index.js
 ├── package.json
 └── README.md
+
+
+## 배포 주소
+
+https://discord-bot-syeb.onrender.com
+
+## 배포 환경
+
+- Render Web Service Free
+- Node.js / Express
+- React / Vite
+- Socket.IO
+- Discord.js
+- DeepL API
+
+## 배포 환경변수
+
+- DISCORD_TOKEN
+- DISCORD_CHANNEL_ID
+- DEEPL_API_KEY
+
+환경변수의 실제 값은 GitHub에 업로드하지 않습니다.
+
+## 참고사항
+
+Render 무료 서버는 일정 시간 요청이 없으면 자동으로 중지됩니다.
+첫 접속 시 서버가 시작되기까지 약 1분이 걸릴 수 있습니다.
+
+
+
