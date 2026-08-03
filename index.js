@@ -53,6 +53,10 @@ const clientDistPath = path.join(__dirname, "client", "dist");
 
 app.use(express.static(clientDistPath));
 
+app.get("/", (request, response) => {
+  response.sendFile(path.join(clientDistPath, "index.html"));
+});
+
 app.get("/{*splat}", (request, response) => {
   response.sendFile(path.join(clientDistPath, "index.html"));
 });
